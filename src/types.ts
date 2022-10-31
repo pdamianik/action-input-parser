@@ -1,142 +1,127 @@
-/* eslint-disable no-unused-vars */
-type ModifierFunction<T extends OptionType> = (val: PrimitiveType<T> | undefined) => PrimitiveType<T>
+import { read } from "fs";
 
-export type BaseOptionType = StringConstructor | BooleanConstructor | NumberConstructor;
-export type OptionType = BaseOptionType | readonly [...BaseOptionType[]];
+export type Defined<T> = T extends undefined | null ? never : T;
+export type DefinedOne<T> = T extends Object ? { [Key in keyof T]: Defined<T[Key]> } : Defined<T>;
+export type DefinedRecursive<T> = T extends Object ? { [Key in keyof T]: DefinedRecursive<T[Key]> } : Defined<T>;
+export type Writeable<T extends Object> = { -readonly [Key in keyof T]: T[Key] }
+export type Known<T> = T extends {} ? T : undefined;
+export type Undefined<T> = T | undefined;
+export type UndefinedZeroOne<T> = T extends Object ? { [Key in keyof T]: Undefined<T[Key]> } : Undefined<T>;
+export type UndefinedOne<Tuple extends Object> = { [Index in keyof Tuple]: Tuple[Index] | undefined };
+export type UndefinedRecursive<T> = T extends Object ? { [Key in keyof T]: UndefinedRecursive<T[Key]> } : Undefined<T>;
+export type NonNullableRecursive<T> = T extends Object ? { [Key in keyof T]: NonNullableRecursive<T[Key]> } : NonNullable<T>;
+export type ArrayElements<T extends readonly any[]> = T extends (infer E)[] ? E : never;
+
+export type ParseFunction<T> = (raw: string) => T;
 
 export const VALID_TYPES = new Set([String, Boolean, Number] as const);
+export type BaseOptionType = StringConstructor | BooleanConstructor | NumberConstructor | ParseFunction<any>;
+export type OptionType = BaseOptionType | readonly [...BaseOptionType[]] | undefined | unknown;
+export type RequiredType = true | false | undefined | unknown;
 
 type BasePrimitiveType<T extends BaseOptionType> =
     T extends StringConstructor ? string :
     T extends BooleanConstructor ? boolean :
     T extends NumberConstructor ? number :
+    T extends ParseFunction<infer RT> ? RT :
     never;
-type BasePrimitiveTypeTuple<Tuple extends readonly [...BaseOptionType[]]> = {
+
+type BasePrimitiveTuple<Tuple extends readonly [...BaseOptionType[]]> = {
     [Index in keyof Tuple]: BasePrimitiveType<Tuple[Index]>;
 };
+
 export type PrimitiveType<T extends OptionType> =
     T extends BaseOptionType ? BasePrimitiveType<T> :
     T extends (infer E extends BaseOptionType)[] ? BasePrimitiveType<E>[] :
     T extends readonly [infer E extends BaseOptionType] ? BasePrimitiveType<E>[] :
-    T extends readonly [...BaseOptionType[]] ? BasePrimitiveTypeTuple<T> :
+    T extends readonly [...BaseOptionType[]] ? BasePrimitiveTuple<T> :
     never;
 
-export type UndefinedPrimitiveType<T extends OptionType> =
-    T extends BaseOptionType ? BasePrimitiveType<T> | undefined :
-    T extends (infer E extends BaseOptionType)[] ? (BasePrimitiveType<E> | undefined)[] | undefined :
-    T extends readonly [(infer E extends BaseOptionType)] ? (BasePrimitiveType<E> | undefined)[] | undefined :
-    T extends readonly [...BaseOptionType[]] ? UndefinedTuple<T> | undefined :
-    never;
+type MergeTypeWithTuple<Type, Tuple extends readonly [...any[]]> = {
+    [Index in keyof Tuple]: Type | Tuple[Index];
+};
 
-type TupleWithDefinedRest<RestType extends BaseOptionType, DefaultType extends BasePrimitiveType<RestType>[] | readonly [...BasePrimitiveType<RestType>[]]> =
-    DefaultType extends readonly [...any[]] ?
+type MergeTupleWithTupleRequired<Tuple1 extends readonly [...any[]], Tuple2 extends readonly [...any[]]> = {
     //@ts-ignore
-    [...MergeOptionAndDefaultType<RestType, DefaultType>, ...BasePrimitiveType<RestType>[]] :
-    BasePrimitiveType<RestType>[];
+    [Index in keyof Tuple1]: Tuple1[Index] | Defined<Tuple2[Index]>;
+}
 
-export type RequiredDefaultPrimitiveType<T extends OptionType, DT extends DefaultType<T>> =
-    T extends BaseOptionType ? BasePrimitiveType<T> :
-    T extends readonly [infer BT extends BaseOptionType] ?
-    DT extends readonly [...BasePrimitiveType<BT>[]] ?
-    TupleWithDefinedRest<BT, DT> :
-    never :
-    T extends (infer BT extends BaseOptionType)[] ?
-    DT extends readonly [...BasePrimitiveType<BT>[]] ?
-    TupleWithDefinedRest<BT, DT> :
-    never :
-    T extends readonly [...BaseOptionType[]] ? BasePrimitiveTypeTuple<T> :
-    never;
-
-type TupleWithUndefinedRest<RestType extends BaseOptionType, DefaultType extends BasePrimitiveType<RestType>[] | readonly [...BasePrimitiveType<RestType>[]]> =
-    DefaultType extends readonly [...any[]] ?
+type MergeTupleWithTupleOptional<Tuple1 extends readonly [...any[]], Tuple2 extends readonly [...any[]]> = {
     //@ts-ignore
-    [...MergeOptionAndDefaultType<RestType, DefaultType>,
-        ...(BasePrimitiveType<RestType> | undefined)[]] :
-    (BasePrimitiveType<RestType> | undefined)[];
+    [Index in keyof Tuple1]: Tuple1[Index] | Tuple2[Index];
+}
 
-type UndefinedTuple<Tuple extends readonly [...BaseOptionType[]]> = {
-    [Index in keyof Tuple]: BasePrimitiveType<Tuple[Index]> | undefined;
-};
+type RequiredArray<BOT extends BaseOptionType, DT extends readonly any[]> =
+    DT extends readonly [...any[]] ?
+    //@ts-ignore
+    [...MergeTypeWithTuple<BasePrimitiveType<BOT>, DefinedOne<DT>>,
+        ...BasePrimitiveType<BOT>[]] :
+    (BasePrimitiveType<BOT> | Defined<ArrayElements<DT>>)[];
 
-type MergeOptionAndDefaultType<T extends BaseOptionType, DT extends DefaultType<T>> = {
-    [Index in keyof DT]: BasePrimitiveType<T> | DT[Index];
-};
+type OptionalArray<BOT extends BaseOptionType, DT extends readonly any[]> =
+    DT extends readonly [...any[]] ?
+    //@ts-ignore
+    [...MergeTypeWithTuple<BasePrimitiveType<BOT>, DT>,
+        ...(BasePrimitiveType<BOT> | undefined)[]] :
+    (BasePrimitiveType<BOT> | ArrayElements<DT> | undefined)[];
 
-export type OptionalDefaultPrimitiveType<T extends OptionType, DT extends DefaultType<T>> =
-    T extends BaseOptionType ? BasePrimitiveType<T> :
-    T extends readonly [infer BT extends BaseOptionType] ?
-    DT extends readonly [...BasePrimitiveType<BT>[]] ?
-    TupleWithUndefinedRest<BT, DT> :
-    never :
-    T extends (infer BT extends BaseOptionType)[] ?
-    DT extends readonly [...BasePrimitiveType<BT>[]] ?
-    TupleWithUndefinedRest<BT, DT> :
-    never :
-    T extends readonly [...BaseOptionType[]] ? BasePrimitiveTypeTuple<T> :
+type RequiredTuple<BOTT extends readonly [...BaseOptionType[]], DT extends readonly any[]> =
+    DT extends readonly [...any[]] ?
+    MergeTupleWithTupleRequired<BasePrimitiveTuple<BOTT>, DT> :
+    MergeTypeWithTuple<Defined<ArrayElements<DT>>, BasePrimitiveTuple<BOTT>>;
+
+type OptionalTuple<BOTT extends readonly [...BaseOptionType[]], DT extends readonly any[]> =
+    DT extends readonly [...any[]] ?
+    MergeTupleWithTupleOptional<BasePrimitiveTuple<BOTT>, DT> :
+    MergeTypeWithTuple<ArrayElements<DT> | undefined, BasePrimitiveTuple<BOTT>>;
+
+export type RequiredOptionPrimitiveResult<OT extends OptionType, DT> =
+    OT extends undefined ? string | Defined<DT> :
+    OT extends BaseOptionType ? BasePrimitiveType<OT> | Defined<DT> :
+    OT extends readonly [infer E extends BaseOptionType] ?
+    DT extends readonly any[] ? RequiredArray<E, DT> :
+    (BasePrimitiveType<E> | Defined<DT>)[] :
+    OT extends (infer E extends BaseOptionType)[] ?
+    DT extends readonly any[] ? RequiredArray<E, DT> :
+    (BasePrimitiveType<E> | Defined<DT>)[] :
+    OT extends readonly [...BaseOptionType[]] ?
+    DT extends readonly any[] ? RequiredTuple<Writeable<OT>, DT> :
+    MergeTypeWithTuple<Defined<DT>, BasePrimitiveTuple<Writeable<OT>>> :
     never;
 
-export type DefaultTuple<T extends readonly [...BaseOptionType[]]> = {
-    readonly [Key in keyof T]: BasePrimitiveType<T[Key]>
-};
-
-export type DefaultType<T extends OptionType> =
-    T extends BaseOptionType ? BasePrimitiveType<T> :
-    T extends (infer E extends BaseOptionType)[] ? readonly [...BasePrimitiveType<E>[]] :
-    T extends readonly [infer E extends BaseOptionType] ? readonly [...BasePrimitiveType<E>[]] :
-    T extends readonly [...BaseOptionType[]] ? DefaultTuple<T> :
+export type OptionalOptionPrimitiveResult<OT extends OptionType, DT> =
+    OT extends undefined ? string | DT :
+    OT extends BaseOptionType ? BasePrimitiveType<OT> | DT :
+    OT extends readonly [infer E extends BaseOptionType] ?
+    DT extends readonly any[] ? OptionalArray<E, DT> :
+    (BasePrimitiveType<E> | DT)[] | undefined :
+    OT extends (infer E extends BaseOptionType)[] ?
+    DT extends readonly any[] ? OptionalArray<E, DT> :
+    (BasePrimitiveType<E> | DT)[] | undefined :
+    OT extends readonly [...BaseOptionType[]] ?
+    DT extends readonly any[] ? OptionalTuple<Writeable<OT>, DT> :
+    //@ts-ignore
+    MergeTypeWithTuple<DT, BasePrimitiveTuple<Writeable<OT>>> | undefined :
     never;
 
-interface BaseOptions<T extends OptionType> {
-    key: string | Array<string>,
-    type?: T,
-    required?: boolean,
-    default?: DefaultType<T>,
-    modifier?: ModifierFunction<T>,
+export type OptionPrimitiveResult<OT extends OptionType, DT, Required extends RequiredType> =
+    Required extends true ?
+    RequiredOptionPrimitiveResult<OT, DT> :
+    OptionalOptionPrimitiveResult<OT, DT>;
+
+export interface BaseOptions<OT extends OptionType, DT, RT extends RequiredType> {
+    input: string | readonly string[],
+    type?: OT,
+    required?: RT,
+    default?: DT,
 }
 
-export interface RequiredOptions<T extends OptionType> extends BaseOptions<T> {
-    type: T,
-    required: true,
-    default?: undefined,
-}
-
-export interface OptionalOptions<T extends OptionType> extends BaseOptions<T> {
-    type: T,
-    required?: false,
-    default?: undefined,
-}
-
-export interface RequiredOptionsWithDefault<T extends OptionType, DT extends DefaultType<T>> extends BaseOptions<T> {
-    type: T,
-    required: true,
-    default: DT,
-}
-
-export interface OptionalOptionsWithDefault<T extends OptionType, DT extends DefaultType<T>> extends BaseOptions<T> {
-    type: T,
-    required?: false,
-    default: DT,
-}
-
-export interface RequiredOptionsWithoutType extends BaseOptions<StringConstructor> {
-    type?: undefined,
+export interface RequiredOptions<OT extends OptionType, DT> extends BaseOptions<OT, DT, true> {
     required: true,
 }
 
-export interface OptionalOptionsWithoutType extends BaseOptions<StringConstructor> {
-    type?: undefined,
+export interface OptionalOptions<OT extends OptionType, DT> extends BaseOptions<OT, DT, false> {
     required?: false,
-    default?: undefined,
 }
 
-export interface OptionalOptionsWithoutTypeWithDefault extends BaseOptions<StringConstructor> {
-    type?: undefined,
-    required?: false,
-    default: string,
-}
-
-export type Options<T extends OptionType> = RequiredOptions<T> | OptionalOptions<T> | RequiredOptionsWithDefault<T, PrimitiveType<T>> | OptionalOptionsWithDefault<T, PrimitiveType<T>> | RequiredOptionsWithoutType | OptionalOptionsWithoutType | OptionalOptionsWithoutTypeWithDefault;
-
-export interface ParsedOpts<T extends OptionType> extends BaseOptions<T> {
-    required: boolean,
-}
+export type Options<OT extends OptionType, DT, RT extends RequiredType> = RequiredOptions<OT, DT> | OptionalOptions<OT, DT>;
