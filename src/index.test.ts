@@ -1,5 +1,8 @@
 import { getInput, getInputs } from ".";
 
+type TypeCheck<T1, T2> =
+	(<G>() => G extends T2 ? 1 : 2) extends (<G>() => G extends T1 ? 1 : 2) ? T1 : never;
+
 describe('get input', () => {
 	const ENV = {
 		...process.env,

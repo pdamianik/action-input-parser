@@ -1,3 +1,6 @@
+export declare type Expand<T> = T extends infer O ? {
+    [K in keyof O]: O[K];
+} : never;
 export declare type Defined<T> = T extends undefined | null ? never : T;
 export declare type DefinedOne<T> = T extends Object ? {
     [Key in keyof T]: Defined<T[Key]>;
@@ -37,11 +40,9 @@ declare type MergeTypeWithTuple<Type, Tuple extends readonly [...any[]]> = {
     [Index in keyof Tuple]: Type | Tuple[Index];
 };
 declare type MergeTupleWithTupleRequired<Tuple1 extends readonly [...any[]], Tuple2 extends readonly [...any[]]> = {
-    //@ts-ignore
     [Index in keyof Tuple1]: Tuple1[Index] | Defined<Tuple2[Index]>;
 };
 declare type MergeTupleWithTupleOptional<Tuple1 extends readonly [...any[]], Tuple2 extends readonly [...any[]]> = {
-    //@ts-ignore
     [Index in keyof Tuple1]: Tuple1[Index] | Tuple2[Index];
 };
 declare type RequiredArray<BOT extends BaseOptionType, DT extends readonly any[]> = DT extends readonly [...any[]] ? [
@@ -70,4 +71,4 @@ export interface OptionalOptions<OT extends OptionType, DT> extends BaseOptions<
     required?: false;
 }
 export declare type Options<OT extends OptionType, DT, RT extends RequiredType> = RequiredOptions<OT, DT> | OptionalOptions<OT, DT>;
-export { };
+export {};

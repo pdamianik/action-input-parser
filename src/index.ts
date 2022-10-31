@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { VALID_TYPES, OptionType, ParseFunction, PrimitiveType, Options, OptionPrimitiveResult, RequiredType, Known, BaseOptions, OptionalOptions, RequiredOptions } from './types';
+import { VALID_TYPES, OptionType, ParseFunction, PrimitiveType, Options, OptionPrimitiveResult, RequiredType, Known, BaseOptions, OptionalOptions, RequiredOptions, Expand } from './types';
 
 dotenv.config();
 
@@ -82,32 +82,33 @@ export function getInput(input: string[]): string | undefined;
 export function getInput<OT extends OptionType, DT>(options: OptionalOptions<OT, DT>): OptionPrimitiveResult<Known<OT>, Known<DT>, false>;
 export function getInput<OT extends OptionType, DT>(options: RequiredOptions<OT, DT>): OptionPrimitiveResult<Known<OT>, Known<DT>, true>;
 export function getInput<Parameter extends string | string[] | Options<OptionType, any, RequiredType>>(input: Parameter): ParameterPrimitive<Parameter> {
-	let options: Options<OptionType, any, RequiredType>;
+	let options: Options<OptionType, any, RequiredType> & { type: OptionType };
 	if (typeof input === 'string' || Array.isArray(input)) {
 		options = {
 			...DEFAULT_OPTIONS,
 			input: input,
 		};
-	} else if (typeof input === 'object') {
+	} else if (typeof input === 'object' && (typeof input.input === 'string' || Array.isArray(input.input))) {
 		options = {
 			...DEFAULT_OPTIONS,
 			...input
-		};
+		} as any;
 	} else {
 		throw new Error('key type has to be either `string` or `string[]`');
 	}
 
 	if (!options.input) throw new Error('No key for input specified');
 
-	if (!VALID_TYPES.has(options.type ?? String as any)) {
+	if (!VALID_TYPES.has(options.type as any)) {
 		if (options.type instanceof Array) {
 			if (options.type.length === 0) {
 				throw new Error('option array type has to have at least one element');
 			}
 
-			for (let type of options.type) {
+			for (const index in options.type) {
+				const type = options.type[index];
 				if (!VALID_TYPES.has(type) && !(type instanceof Function)) {
-					throw new Error('option array type elements have to be either `string`, `boolean`, `number` or `function`');
+					throw new Error(`option array type element at index ${index} has to be either a \`string\`, \`boolean\`, \`number\` or \`function\``);
 				}
 			}
 		} else if (options.type instanceof Function) {
@@ -119,26 +120,23 @@ export function getInput<Parameter extends string | string[] | Options<OptionTyp
 
 	const val = typeof options.input === 'string' ? getEnvVar(options.input) : options.input.map(getEnvVar).find(item => item);
 
-	let parsed = val !== undefined ? parseValue(val, options.type as any ?? String) : undefined;
+	let parsed: unknown = val !== undefined ? parseValue(val, options.type) : undefined;
 
 	if (options.type instanceof Array) {
-		const parsedArray = parsed as any[] ?? [] as any[];
-		let tmp = [];
+		if (options.default instanceof Array || typeof val === 'string') {
+			const parsedArray = (parsed ?? []) as any[];
+			let tmp = [], typeLength: number, defaultValue: (index: number) => any;
 
-		if (options.default instanceof Array) {
-			const defaultArray = options.default as any[] ?? [];
-			const typeLength = options.type.length === 1 ? Math.max(defaultArray.length, parsedArray.length) : options.type.length;
-
-			for (let index = 0; index < typeLength; index++) {
-				tmp.push(parsedArray[index] ?? defaultArray[index]);
+			if (options.default instanceof Array) {
+				typeLength = options.type.length === 1 ? Math.max(options.default.length, parsedArray.length) : options.type.length;
+				defaultValue = (index: number) => options.default[index];
+			} else {
+				typeLength = options.type.length === 1 ? parsedArray.length : options.type.length;
+				defaultValue = () => options.default;
 			}
 
-			parsed = tmp as any[];
-		} else if (typeof val === 'string') {
-			const typeLength = options.type.length === 1 ? parsedArray.length : options.type.length;
-
 			for (let index = 0; index < typeLength; index++) {
-				tmp.push(parsedArray[index] ?? options.default);
+				tmp.push(parsedArray[index] ?? defaultValue(index));
 			}
 
 			parsed = tmp as any[];
@@ -176,7 +174,7 @@ type ParametersPrimitive<Input extends { [key: string]: string | string[] | Opti
 	Input[Key] extends Object ? string | undefined :
 	never;
 }
-export function getInputs<Inputs extends { [key: string]: string | string[] | Options<OptionType, any, RequiredType> }>(inputs: Inputs): ParametersPrimitive<Inputs> {
+export function getInputs<Inputs extends { [key: string]: string | string[] | Options<OptionType, any, RequiredType> }>(inputs: Inputs): Expand<ParametersPrimitive<Inputs>> {
 	for (const [k, v] of Object.entries(inputs)) {
 		(inputs[k] as any) = getInput(v as any ?? k);
 	}

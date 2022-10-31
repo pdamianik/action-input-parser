@@ -1,5 +1,4 @@
-import { read } from "fs";
-
+export type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;
 export type Defined<T> = T extends undefined | null ? never : T;
 export type DefinedOne<T> = T extends Object ? { [Key in keyof T]: Defined<T[Key]> } : Defined<T>;
 export type DefinedRecursive<T> = T extends Object ? { [Key in keyof T]: DefinedRecursive<T[Key]> } : Defined<T>;

@@ -1,4 +1,4 @@
-import { OptionType, Options, OptionPrimitiveResult, RequiredType, Known, OptionalOptions, RequiredOptions } from './types';
+import { OptionType, Options, OptionPrimitiveResult, RequiredType, Known, OptionalOptions, RequiredOptions, Expand } from './types';
 export declare function getInput(input: string): string | undefined;
 export declare function getInput(input: string[]): string | undefined;
 export declare function getInput<OT extends OptionType, DT>(options: OptionalOptions<OT, DT>): OptionPrimitiveResult<Known<OT>, Known<DT>, false>;
@@ -10,5 +10,5 @@ declare type ParametersPrimitive<Input extends {
 };
 export declare function getInputs<Inputs extends {
     [key: string]: string | string[] | Options<OptionType, any, RequiredType>;
-}>(inputs: Inputs): ParametersPrimitive<Inputs>;
+}>(inputs: Inputs): Expand<ParametersPrimitive<Inputs>>;
 export {};

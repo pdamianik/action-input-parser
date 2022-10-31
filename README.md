@@ -365,6 +365,6 @@ This project was developed by me ([@betahuhn](https://github.com/BetaHuhn)) in m
 
 ## 📄 License
 
-Copyright 2021 Maximilian Schiller
+Copyright 2022 Philip Damianik
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
