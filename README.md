@@ -1,8 +1,8 @@
 <div align="center">
   
-# Action Input Parser
+# Github Action Input Parser
 
-[![Node CI](https://github.com/BetaHuhn/action-input-parser/workflows/Node%20CI/badge.svg)](https://github.com/BetaHuhn/action-input-parser/actions?query=workflow%3A%22Node+CI%22) [![Release CI](https://github.com/BetaHuhn/action-input-parser/workflows/Release%20CI/badge.svg)](https://github.com/BetaHuhn/action-input-parser/actions?query=workflow%3A%22Release+CI%22) [![GitHub](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/BetaHuhn/action-input-parser/blob/master/LICENSE) ![David](https://img.shields.io/david/betahuhn/action-input-parser)
+[![GitHub](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/pdamianik/github-action-input-parser/blob/master/LICENSE)
 
 Helper for parsing inputs in a GitHub Action
 
@@ -10,29 +10,37 @@ Helper for parsing inputs in a GitHub Action
 
 ## ⭐ Features
 
-- Similar API to [`core.getInput()`](https://github.com/actions/toolkit/tree/main/packages/core#inputsoutputs)
 - Parses [string, booleans, numbers and arrays](#types) to correct JS types
 - Supports [default values](#default-values) if no input was provided
 - Throws errors if input is set to [required](#required-inputs) and is missing
-- Uses local environment variables (and `.env` files) during [development](#development)
-- Specify a [custom function](#modify-the-parsed-input) for advanced parsing
-- Supports [array of keys](#key)
+- Uses local environment variables and `.env` files during [development](#development)
+- Specify a [custom function](#types) for advanced parsing
+- Supports [array of inputs](#input)
+- Supports [Typescript](#typescript)
+- Supports parsing [multiple inputs](#getInputs)
 
 ## 🚀 Get started
 
-Install [action-input-parser](https://github.com/BetaHuhn/action-input-parser) via npm:
+Install [github-action-input-parser](https://github.com/pdamianik/github-action-input-parser) via npm:
+
 ```shell
-npm install action-input-parser
+npm install github-action-input-parser
 ```
 
 ## 📚 Usage
 
-Import `action-input-parser` and use it like this:
+Import `github-action-input-parser` and use it like this:
+
+Javascript:
 
 ```js
-const parser = require('action-input-parser')
+const parser = require('github-action-input-parser');
+```
 
-const value = parser.getInput('name')
+JS Modules/Typescript:
+
+```js
+import * as parser from 'github-action-input-parser';
 ```
 
 ### Example
@@ -47,34 +55,33 @@ with:
         Richard
 ```
 
-Pass an options object to the `getInput` function to specify the `array` type:
+Pass an options object to the `getInput` function to specify an array of `String` type:
 
-```js
-const parser = require('action-input-parser')
-
-const value = parser.getInput('names', {
-    type: 'array'
-})
+```ts
+const value = parser.getInput({
+    input: 'names',
+    type: <const>[String],
+});
 
 // [ 'Maximilian', 'Richard' ]
 ```
 
-[action-input-parser](https://github.com/BetaHuhn/action-input-parser) will parse the `names` input and return an array.
+[github-action-input-parser](https://github.com/pdamianik/github-action-input-parser) will parse the `names` input and return an array.
 
 See below for [all options](#all-options) or checkout a few more [examples](#-examples).
 
 ## ⚙️ Configuration
 
-You can pass the following JavaScript object to `getInput` as the first or second parameter to tell [action-input-parser](https://github.com/BetaHuhn/action-input-parser) what to parse:
+You can pass the following object to `getInput` to tell [github-action-input-parser](https://github.com/pdamianik/github-action-input-parser) what to parse:
 
-```js
+```ts
 const options = {
-    key: 'names',
-    type: 'array',
-    default: [ 'maximilian' ]
-}
+    input: 'names',
+    type: <const>[String],
+    default: <const>['maximilian'],
+};
 
-parser.getInput(options)
+parser.getInput(options);
 
 ```
 
@@ -82,67 +89,81 @@ parser.getInput(options)
 
 Here are all the options you can use and there default values:
 
-| Name | Description | Required | Default |
-| ------------- | ------------- | ------------- | ------------- |
-| `key` | The key of the input option (can also be an array of keys) | **Yes** | N/A |
-| `type` | The type of the input value (`string`/`boolean`/`number`/`array`) | **No** | `string` |
-| `required` | Specify if the input is required | **No** | false |
-| `default` | Specify a default value for the input | **No** | N/A |
-| `disableable` | Specify if the input should be able to be disabled by setting it to `false` | **No** | `false` |
-| `modifier` | A function which gets passed the parsed value as a parameter and returns another value  | **No** | N/A |
+| Name | Description | Required | Default | See more |
+| ------------- | ------------- | ------------- | ------------- | ------------- |
+| `input` | The input name (can also be an array of inputs) | **Yes** | N/A | [Input](#input) |
+| `type` | The type of the input value | **No** | `String` | [Types](#types) |
+| `required` | Specify if the input is required | **No** | false | [Required Inputs](#required-inputs) |
+| `default` | Specify a default value for the input | **No** | undefined | [Default Values](#default-values) |
 
-### Key
+### Input
 
-You can either specify a single key as a string, or multiple keys as an array of strings.
+You can either specify a single input as a string, or multiple inputs as an array of strings. This options declares which input(s) should be parsed. When using an array of inputs the first input defined will be picked for parsing.
 
-[See example](#multiple-keys)
+> Note: Even when the chosen input can not be parsed for the given type, [github-action-input-parser](https://github.com/pdamianik/github-action-input-parser) will not try another input and instead throw an error
+
+[See example](#pick-from-multiple-inputs)
 
 ### Types
 
-You can specify one of the following types which will determine how the input is parsed:
+You can specify one of the following basic types (BaseTypes) which will determine how the input is parsed:
 
-- `string` - default type, the input value will only be trimmed
-- `boolean` - will parse a boolean based on the [yaml 1.2 specification](https://yaml.org/spec/1.2/spec.html#id2804923)
-- `number` - will convert the input to a number
-- `array` - will parse line or comma seperated values to an array
+- `String` - Default type, the input value will only be trimmed
+- `Boolean` - Will parse a boolean based on the [yaml 1.2 specification](https://yaml.org/spec/1.2/spec.html#id2804923)
+- `Number` - Will convert the input to a number
+- `(value: string) => any` / `Function` - Will call the function specified to parse an input. Use this for custom types
+
+> Note: `String`, `Boolean` and `Number` are literals of type `StringConstructor`, `BooleanConstructor` and `NumberConstructor` respectively
 
 > Note: if the input can not be converted to the specifed type, an error is thrown
+
+Additionally you can specifiy an array with the 4 BaseTypes as elements. When using typescript it is recommended to prefix the array with `<const>` or suffix it with `as const` for optimal type-hinting. The meaning of the array type depends on the amount of its elements:
+
+ - 0 elements - not allowed, [github-action-input-parser](https://github.com/pdamianik/github-action-input-parser) will throw an error
+ - 1 element - [github-action-input-parser](https://github.com/pdamianik/github-action-input-parser) will treat this type as an __Array Type__ and tries parsing the input for any number of elements separated by a comma or a newline using the parser specified by the BaseType inside the type array
+ - 2+ elements - [github-action-input-parser](https://github.com/pdamianik/github-action-input-parser) will treat this type as a __Tuple Type__ and tries parsing the input for as many elements separated by a comma or a newline as the number of elements in the type array. The parser used depends on the type at the equivalent index in the type array
 
 [See example](#specify-a-type)
 
 ### Required inputs
 
-When you set required to true and the input is not set, [action-input-parser](https://github.com/BetaHuhn/action-input-parser) will throw an error.
+When you set required to true and the input(s) are not set or could not be parsed, [github-action-input-parser](https://github.com/pdamianik/github-action-input-parser) will throw an error. When using an array type [github-action-input-parser](https://github.com/pdamianik/github-action-input-parser) will check each element of the resulting array and if any of them could not be parsed [github-action-input-parser](https://github.com/pdamianik/github-action-input-parser) will throw an error.
 
 [See example](#set-an-input-to-be-required)
 
 ### Default values
 
-You can specify a default value for the input which will be used when the input is not set.
+You can specify a default value for the input which will be used when the input is not set. How this default value will be used depends on its type and the [type](#types) of the parsed content:
+
+| `type` option | default value type | behavior |
+| ------------- | ------------- | ------------- |
+| BaseTypes | any | The default value replaces the parsed value if the parsed value is `undefined` |
+| ArrayType or TupleType | any non-array | The default value replaces any `undefined` elements of the parsed array. However the default value will not replace the parsed value itself if it ends up being `undefined` (e.g. when the input is not set) |
+| ArrayType or TupleType | any array | The elements of the default value replace any `undefined` element at the same index in the parsed array. If the parsed array is longer than the default value array this can result in `undefined` elements beyond the length of the default value array. The default value array __will__ replace the parsed array if it is `undefined`
 
 [See example](#specify-a-default-value)
 
-### Disableable input
-
-If you have an input with a default value but you still want the user to be able to unset the input, set the `disableable` option to `true`.
-
-When the input is then set to `false`, [action-input-parser](https://github.com/BetaHuhn/action-input-parser) will return `undefined` instead of your default value.
-
-[See example](#disable-an-input)
-
-### Modifier function
-
-If your input needs additional processing you can specify a function which will be passed the parsed input value.
-
-[See example](#modify-the-parsed-input)
-
 ### Development
 
-If you run your Action locally during development, you can set the inputs as environment variables or specify them in a `.env` file. [action-input-parser](https://github.com/BetaHuhn/action-input-parser) will use them as the inputs automatically.
+If you run your Action locally during development, you can set the inputs as environment variables or specify them in a `.env` file. [github-action-input-parser](https://github.com/pdamianik/github-action-input-parser) will use them as the inputs automatically.
+
+## Typescript
+
+This library has Typescript support but to get the most out of it you have to prefix any Array passed to the configuration options [type](#types) and [default](#default-values) with `<const>` or suffix them with `as const`.
+
+[See example](#specify-a-type)
+
+## `getInputs`
+
+To parse multiple inputs with different configurations into one options you can use the `getInputs()` function. It takes an object where each element is either an argument for `getInput()` (`string | string[] | Options`) or `undefined`. When an element is `undefined` the key will be used as the input name.
+
+[See example](#parse-multiple-inputs)
 
 ## 📖 Examples
 
-Here are some examples on how to use [action-input-parser](https://github.com/BetaHuhn/action-input-parser):
+Here are some examples on how to use [github-action-input-parser](https://github.com/pdamianik/github-action-input-parser):
+
+See [README.test.ts](https://github.com/pdamianik/github-action-input-parser/blob/master/test/README.test.ts)
 
 ### Basic example
 
@@ -157,9 +178,7 @@ with:
 Action code:
 
 ```js
-const parser = require('action-input-parser')
-
-const value = parser.getInput('name')
+const value = parser.getInput('name');
 
 // value -> Maximilian
 ```
@@ -167,11 +186,9 @@ const value = parser.getInput('name')
 or 
 
 ```js
-const parser = require('action-input-parser')
-
 const value = parser.getInput({
-    key: 'name'
-})
+    input: 'name',
+});
 
 // value -> Maximilian
 ```
@@ -189,107 +206,167 @@ with:
 Action code:
 
 ```js
-const parser = require('action-input-parser')
-
 const value = parser.getInput({ 
-    key: 'dry_run',
-    type: 'boolean'
-})
+    input: 'dry_run',
+    type: Boolean,
+});
 
 // Without setting the type to boolean, the value would have been 'true'
 ```
 
+Action Workflow:
+
+```yml
+uses: username/action
+with:
+    stages: |
+        'dev'
+        'prod'
+```
+
+Action code:
+
+```ts
+const value = parser.getInput({ 
+    input: 'stages',
+    type: <const>[String],
+});
+
+// ['dev', 'prod']
+```
+
+Action Workflow:
+
+```yml
+uses: username/action
+with:
+    fruits: |
+        10
+        apples
+```
+
+Action code:
+
+```ts
+const value = parser.getInput({ 
+    input: 'fruits',
+    type: <const>[Number, String],
+});
+
+// [10, 'apples']
+```
+
 ### Specify a default value
+
+Action Workflow:
+
+```yml
+uses: username/action
+with:
+```
 
 Action code:
 
 ```js
-const parser = require('action-input-parser')
-
 const value = parser.getInput({ 
-    key: 'name',
-    default: 'Maximilian'
-})
+    input: 'name',
+    default: 'Maximilian',
+});
 
-// If name is not set, Maximilian will be returned as the name
+// As name is not set, Maximilian will be returned as the name
+```
+
+Action Workflow:
+
+```yml
+uses: username/action
+with:
+    command: |
+        bring me
+
+        apples
+```
+
+Action code:
+
+```ts
+const value = parser.getInput({ 
+    input: 'command',
+    type: <const>[String, Number, String],
+    default: <const>[undefined, 10],
+});
+
+// ['bring me', 10, 'apples']
 ```
 
 ### Set an input to be required
 
+Action Workflow:
+
+```yml
+uses: username/action
+with:
+```
+
 Action code:
 
 ```js
-const parser = require('action-input-parser')
-
 const value = parser.getInput({
-    key: 'name',
-    required: true
-})
+    input: 'name',
+    required: true,
+});
 
 // Will throw an error if name is not set
 ```
 
-### Disable an input
+### Pick from multiple inputs
 
 Action Workflow:
 
 ```yml
 uses: username/action
 with:
-    labels: false
+    GH_PAT: 'abcdefghijklmnopqrstuvwxyz';
 ```
 
 Action code:
 
 ```js
-const parser = require('action-input-parser')
-
-const value = parser.getInput({
-    key: 'labels', 
-    default: [ 'merged', 'ready' ],
-    disableable: true
-})
-
-// Value will be undefined because labels was set to false
-```
-
-### Multiple Keys
-
-Action code:
-
-```js
-const parser = require('action-input-parser')
-
 const value = parser.getInput({ 
-    key: [ 'GITHUB_TOKEN', 'GH_PAT' ]
-})
+    input: [ 'GITHUB_TOKEN', 'GH_PAT' ]
+});
 
-// The first key takes precedence
+// The first input available takes precedence -> GH_PATs value will be parsed
 ```
 
-### Modify the parsed input
+### Parse multiple inputs
 
-Action Workflow:
+Action code:
+
+Javascript:
 
 ```yml
 uses: username/action
 with:
-    name: Maximilian
+    greeting: 'Hello world!'
+    GH_PAT: 'abcdefghijklmnopqrstuvwxyz'
 ```
 
-Action code:
-
 ```js
-const parser = require('action-input-parser')
+const {value1, value2, value3} = parser.getInputs({
+    value1: 'greeting',
+    value2: {
+        input: [ 'GITHUB_TOKEN', 'GH_PAT' ],
+        required: true,
+    },
+    value3: {
+        input: 'max retires',
+        type: Number,
+        default: 3,
+    },
+});
 
-const value = parser.getInput({
-    key: 'name',
-    modifier: (val) => {
-        return val.toLowerCase()
-    }
-})
-
-// Value will be maximilian
+// value1 = 'Hello world!', value2 = 'abcdefghijklmnopqrstuvwxyz', value3 = 3
 ```
 
 ### Advanced example
@@ -308,31 +385,29 @@ with:
 
 Action code:
 
-```js
-const { getInput } = require('action-input-parser')
-
-const config = {
-    githubToken: getInput({
-        key: 'github_token',
-        required: true
-    }),
-    repository: getInput({
-        key: 'repository',
-        modifier: (val) => {
+```ts
+const config = getInputs({
+    githubToken: {
+        input: 'github_token',
+        required: true,
+    },
+    repository: {
+        input: 'repository',
+        type: (val) => {
             const [user, repo] = val.split('/')
             return { user, repo }
-        }
-    }),
-    labels: getInput({
-        key: 'labels',
-        type: 'array'
-    }),
-    dryRun: getInput({
-        key: 'dry_run',
-        type: 'boolean',
-        default: false
-    }),
-}
+        },
+    },
+    labels: {
+        input: 'labels',
+        type: <const>[String],
+    },
+    dryRun: {
+        input: 'dry_run',
+        type: Boolean,
+        default: false,
+    },
+});
 
 // parsed config:
 {
@@ -342,9 +417,13 @@ const config = {
         repo: 'reponame'
     },
     labels: [ 'merged', 'ready' ],
-    dryRun: false
+    dryRun: false,
 }
 ```
+
+## 📖 Extended Examples
+
+See [index.test.ts](https://github.com/pdamianik/github-action-input-parser/blob/master/src/index.test.ts)
 
 ## 💻 Development
 
@@ -357,7 +436,7 @@ The actual source code of this library is in the `src` folder.
 
 ## ❔ About
 
-This project was developed by me ([@betahuhn](https://github.com/BetaHuhn)) in my free time. If you want to support me:
+This project was originally developed by ([@betahuhn](https://github.com/BetaHuhn)) and was heavily modified by ([@pdamianik](https://github.com/pdamianik/)) in their free time. If you want to support [@betahuhn](https://github.com/BetaHuhn):
 
 [![Donate via PayPal](https://img.shields.io/badge/paypal-donate-009cde.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=394RTSBEEEFEE)
 
@@ -365,6 +444,7 @@ This project was developed by me ([@betahuhn](https://github.com/BetaHuhn)) in m
 
 ## 📄 License
 
+Copyright 2021 Maximilian Schiller<br>
 Copyright 2022 Philip Damianik
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
