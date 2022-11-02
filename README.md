@@ -149,7 +149,7 @@ If you run your Action locally during development, you can set the inputs as env
 
 ## Typescript
 
-This library has Typescript support but to get the most out of it you have to prefix any Array passed to the configuration options [type](#types) and [default](#default-values) with `<const>` or suffix them with `as const`.
+This library has Typescript support but to get the most out of it you have to prefix any array passed to the configuration options [type](#types) and [default](#default-values) with `<const>` or suffix them with `as const`.
 
 [See example](#specify-a-type)
 

@@ -1,6 +1,6 @@
 {
   "name": "github-action-input-parser",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Helper for parsing inputs in a GitHub Action",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -11,6 +11,7 @@
     "lint": "eslint ./src/ --ext .ts",
     "watch": "tsc -w -p tsconfig.json",
     "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build",
     "test": "jest"
   },
   "repository": {
@@ -21,10 +22,8 @@
     "url": "https://github.com/pdamianik/github-action-input-parser/issues"
   },
   "homepage": "https://github.com/pdamianik/github-action-input-parser#readme",
-  "author": [
-    "Philip Damianik <39028343+pdamianik@users.noreply.github.com>",
-    "Maximilian Schiller <schiller@mxis.ch>"
-  ],
+  "author": "Maximilian Schiller <schiller@mxis.ch>",
+  "contributors": ["Jeff Miller", "Philip Damianik <39028343+pdamianik@users.noreply.github.com>"],
   "license": "MIT",
   "keywords": [
     "nodejs",

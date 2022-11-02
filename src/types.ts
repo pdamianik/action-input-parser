@@ -108,19 +108,36 @@ export type OptionPrimitiveResult<OT extends OptionType, DT, Required extends Re
     RequiredOptionPrimitiveResult<OT, DT> :
     OptionalOptionPrimitiveResult<OT, DT>;
 
-export interface BaseOptions<OT extends OptionType, DT, RT extends RequiredType> {
+export interface BaseInputOption<OT extends OptionType, DT, RT extends RequiredType> {
     input: string | readonly string[],
     type?: OT,
     required?: RT,
     default?: DT,
 }
 
-export interface RequiredOptions<OT extends OptionType, DT> extends BaseOptions<OT, DT, true> {
+export interface RequiredInputOption<OT extends OptionType, DT> extends BaseInputOption<OT, DT, true> {
     required: true,
 }
 
-export interface OptionalOptions<OT extends OptionType, DT> extends BaseOptions<OT, DT, false> {
+export interface OptionalInputOption<OT extends OptionType, DT> extends BaseInputOption<OT, DT, false> {
     required?: false,
 }
 
-export type Options<OT extends OptionType, DT, RT extends RequiredType> = RequiredOptions<OT, DT> | OptionalOptions<OT, DT>;
+export type InputOption<OT extends OptionType, DT, RT extends RequiredType> = RequiredInputOption<OT, DT> | OptionalInputOption<OT, DT>;
+
+export interface BaseInputsOption<OT extends OptionType, DT, RT extends RequiredType> {
+    input?: string | readonly string[],
+    type?: OT,
+    required?: RT,
+    default?: DT,
+}
+
+export interface RequiredInputsOption<OT extends OptionType, DT> extends BaseInputsOption<OT, DT, true> {
+    required: true,
+}
+
+export interface OptionalInputsOption<OT extends OptionType, DT> extends BaseInputsOption<OT, DT, false> {
+    required?: false,
+}
+
+export type InputsOption<OT extends OptionType, DT, RT extends RequiredType> = RequiredInputsOption<OT, DT> | OptionalInputsOption<OT, DT>;

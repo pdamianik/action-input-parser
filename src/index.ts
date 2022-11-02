@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { VALID_TYPES, OptionType, ParseFunction, PrimitiveType, Options, OptionPrimitiveResult, RequiredType, Known, BaseOptions, OptionalOptions, RequiredOptions, Expand } from './types';
+import { VALID_TYPES, OptionType, ParseFunction, PrimitiveType, InputOption, OptionPrimitiveResult, RequiredType, Known, BaseInputOption, OptionalInputOption, RequiredInputOption, Expand, RequiredInputsOption, OptionalInputsOption, InputsOption } from './types';
 
 dotenv.config();
 
@@ -71,18 +71,18 @@ function parseValue<T extends OptionType>(value: string, type: T): PrimitiveType
 	throw new Error(`type \`${type}\` is invalid`)
 }
 
-type ParameterPrimitive<Parameter extends string | string[] | Options<OptionType, any, RequiredType>> =
+type ParameterPrimitive<Parameter extends string | string[] | InputOption<OptionType, any, RequiredType>> =
 	Parameter extends string ? string | undefined :
 	Parameter extends string[] ? string | undefined :
-	Parameter extends BaseOptions<infer OT extends OptionType, infer DT, infer RT extends RequiredType> ? OptionPrimitiveResult<Known<OT>, Known<DT>, Known<RT>> :
+	Parameter extends BaseInputOption<infer OT extends OptionType, infer DT, infer RT extends RequiredType> ? OptionPrimitiveResult<Known<OT>, Known<DT>, Known<RT>> :
 	never;
 
 export function getInput(input: string): string | undefined;
 export function getInput(input: string[]): string | undefined;
-export function getInput<OT extends OptionType, DT>(options: OptionalOptions<OT, DT>): OptionPrimitiveResult<Known<OT>, Known<DT>, false>;
-export function getInput<OT extends OptionType, DT>(options: RequiredOptions<OT, DT>): OptionPrimitiveResult<Known<OT>, Known<DT>, true>;
-export function getInput<Parameter extends string | string[] | Options<OptionType, any, RequiredType>>(input: Parameter): ParameterPrimitive<Parameter> {
-	let options: Options<OptionType, any, RequiredType> & { type: OptionType };
+export function getInput<OT extends OptionType, DT>(options: OptionalInputOption<OT, DT>): OptionPrimitiveResult<Known<OT>, Known<DT>, false>;
+export function getInput<OT extends OptionType, DT>(options: RequiredInputOption<OT, DT>): OptionPrimitiveResult<Known<OT>, Known<DT>, true>;
+export function getInput<Parameter extends string | string[] | InputOption<OptionType, any, RequiredType>>(input: Parameter): ParameterPrimitive<Parameter> {
+	let options: InputOption<OptionType, any, RequiredType> & { type: OptionType };
 	if (typeof input === 'string' || Array.isArray(input)) {
 		options = {
 			...DEFAULT_OPTIONS,
@@ -164,19 +164,40 @@ export function getInput<Parameter extends string | string[] | Options<OptionTyp
 	return parsed as any;
 }
 
-type ParametersPrimitive<Input extends { [key: string]: string | string[] | Options<OptionType, any, RequiredType> }> = {
+type ParametersPrimitive<Input extends { [key: string]: undefined | string | string[] | InputsOption<OptionType, any, RequiredType> }> = {
 	[Key in keyof Input]:
 	Input[Key] extends undefined ? string | undefined :
 	Input[Key] extends string ? string | undefined :
 	Input[Key] extends string[] ? string | undefined :
-	Input[Key] extends RequiredOptions<infer OT extends OptionType, infer DT> ? OptionPrimitiveResult<Known<OT>, Known<DT>, true> :
-	Input[Key] extends OptionalOptions<infer OT extends OptionType, infer DT> ? OptionPrimitiveResult<Known<OT>, Known<DT>, false> :
+	Input[Key] extends RequiredInputsOption<infer OT extends OptionType, infer DT> ? OptionPrimitiveResult<Known<OT>, Known<DT>, true> :
+	Input[Key] extends OptionalInputsOption<infer OT extends OptionType, infer DT> ? OptionPrimitiveResult<Known<OT>, Known<DT>, false> :
 	Input[Key] extends Object ? string | undefined :
 	never;
 }
-export function getInputs<Inputs extends { [key: string]: string | string[] | Options<OptionType, any, RequiredType> }>(inputs: Inputs): Expand<ParametersPrimitive<Inputs>> {
-	for (const [k, v] of Object.entries(inputs)) {
-		(inputs[k] as any) = getInput(v as any ?? k);
+export function getInputs<Inputs extends { [key: string]: undefined | string | string[] | InputsOption<OptionType, any, RequiredType> }>(inputs: Inputs): Expand<ParametersPrimitive<Inputs>> {
+	let inputName;
+	try {
+		for (const [k, v] of Object.entries(inputs)) {
+			inputName = k;
+			let inputConfig;
+			if (v === undefined) {
+				inputConfig = k;
+			} else if (typeof v === 'string' || Array.isArray(v)) {
+				inputConfig = v;
+			} else if (typeof v === 'object') {
+				inputConfig = v;
+				inputConfig.input ??= k;
+			} else {
+				throw Error('option config type has to be either `undefined`, `string`, `string[]` or `object`');
+			}
+			(inputs[k] as any) = getInput(v as any || k);
+		}
+		return inputs as any;
+	} catch (error) {
+		if (error instanceof Error) {
+			error.message = `config \`${inputName}\`: ${error.message}`;
+			throw error;
+		}
+		throw error;
 	}
-	return inputs as any
 }

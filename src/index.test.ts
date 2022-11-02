@@ -2277,6 +2277,9 @@ it('getInputs', () => {
 		test10,
 		test11,
 		test12,
+		abc,
+		def,
+		ghi,
 	} = getInputs({
 		test1: 'abc',
 		test2: ['def', 'abc'],
@@ -2325,18 +2328,39 @@ it('getInputs', () => {
 			type: Number,
 			default: 1,
 		},
+		abc: undefined,
+		def: {},
+		ghi: { required: true },
 	});
 
 	expect(test1).toEqual('abc');
+	const check1: TypeCheck<typeof test1, string | undefined> = test1;
 	expect(test2).toEqual('def');
+	const check2: TypeCheck<typeof test2, string | undefined> = test2;
 	expect(test3).toEqual('abc');
+	const check3: TypeCheck<typeof test3, string | undefined> = test3;
 	expect(test4).toEqual(true);
+	const check4: TypeCheck<typeof test4, boolean | undefined> = test4;
 	expect(test5).toEqual(0);
+	const check5: TypeCheck<typeof test5, number | undefined> = test5;
 	expect(test6).toEqual([true, false, true, false]);
+	const check6: TypeCheck<typeof test6, (boolean | undefined)[] | undefined> = test6;
 	expect(test7).toEqual(['a', 0, true]);
+	const check7: TypeCheck<typeof test7, [string | undefined, number | undefined, boolean | undefined] | undefined> = test7;
 	expect(test8).toEqual([true, false, true, false]);
+	const check8: TypeCheck<typeof test8, boolean[]> = test8;
 	expect(test9).toEqual(['a', 0, true]);
+	const check9: TypeCheck<typeof test9, [string, number, boolean]> = test9;
 	expect(test10).toEqual('xyz');
+	const check10: TypeCheck<typeof test10, string> = test10;
 	expect(test11).toEqual(false);
+	const check11: TypeCheck<typeof test11, boolean> = test11;
 	expect(test12).toEqual(1);
+	const check12: TypeCheck<typeof test12, number> = test12;
+	expect(abc).toEqual('abc');
+	const checkabc: TypeCheck<typeof abc, string | undefined> = abc;
+	expect(def).toEqual('def');
+	const checkdef: TypeCheck<typeof def, string | undefined> = def;
+	expect(ghi).toEqual('ghi');
+	const checkghi: TypeCheck<typeof ghi, string> = ghi;
 });
