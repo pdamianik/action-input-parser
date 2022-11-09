@@ -10,7 +10,8 @@
       "declaration": true,
       "outDir": "./lib",
       "strict": true,
-      "esModuleInterop": true
+      "esModuleInterop": true,
+      "noUncheckedIndexedAccess": true
     },
     "include": ["src"]
   }

@@ -1,6 +1,6 @@
 {
   "name": "github-action-input-parser",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Helper for parsing inputs in a GitHub Action",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

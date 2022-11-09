@@ -10,6 +10,7 @@ export type UndefinedOne<Tuple extends Object> = { [Index in keyof Tuple]: Tuple
 export type UndefinedRecursive<T> = T extends Object ? { [Key in keyof T]: UndefinedRecursive<T[Key]> } : Undefined<T>;
 export type NonNullableRecursive<T> = T extends Object ? { [Key in keyof T]: NonNullableRecursive<T[Key]> } : NonNullable<T>;
 export type ArrayElements<T extends readonly any[]> = T extends (infer E)[] ? E : never;
+export type IndexOrUndefined<Tuple, Index> = Index extends keyof Tuple ? Tuple[Index] : undefined;
 
 export type ParseFunction<T> = (raw: string) => T;
 
@@ -41,13 +42,11 @@ type MergeTypeWithTuple<Type, Tuple extends readonly [...any[]]> = {
 };
 
 type MergeTupleWithTupleRequired<Tuple1 extends readonly [...any[]], Tuple2 extends readonly [...any[]]> = {
-    //@ts-ignore
-    [Index in keyof Tuple1]: Tuple1[Index] | Defined<Tuple2[Index]>;
+    [Index in keyof Tuple1]: Tuple1[Index] | Defined<IndexOrUndefined<Tuple2, Index>>;
 }
 
 type MergeTupleWithTupleOptional<Tuple1 extends readonly [...any[]], Tuple2 extends readonly [...any[]]> = {
-    //@ts-ignore
-    [Index in keyof Tuple1]: Tuple1[Index] | Tuple2[Index];
+    [Index in keyof Tuple1]: Tuple1[Index] | IndexOrUndefined<Tuple2, Index>;
 }
 
 type RequiredArray<BOT extends BaseOptionType, DT extends readonly any[]> =

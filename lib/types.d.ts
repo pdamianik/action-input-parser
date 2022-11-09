@@ -26,6 +26,7 @@ export declare type NonNullableRecursive<T> = T extends Object ? {
     [Key in keyof T]: NonNullableRecursive<T[Key]>;
 } : NonNullable<T>;
 export declare type ArrayElements<T extends readonly any[]> = T extends (infer E)[] ? E : never;
+export declare type IndexOrUndefined<Tuple, Index> = Index extends keyof Tuple ? Tuple[Index] : undefined;
 export declare type ParseFunction<T> = (raw: string) => T;
 export declare const VALID_TYPES: Set<StringConstructor | BooleanConstructor | NumberConstructor>;
 export declare type BaseOptionType = StringConstructor | BooleanConstructor | NumberConstructor | ParseFunction<any>;
@@ -40,12 +41,10 @@ declare type MergeTypeWithTuple<Type, Tuple extends readonly [...any[]]> = {
     [Index in keyof Tuple]: Type | Tuple[Index];
 };
 declare type MergeTupleWithTupleRequired<Tuple1 extends readonly [...any[]], Tuple2 extends readonly [...any[]]> = {
-    //@ts-ignore
-    [Index in keyof Tuple1]: Tuple1[Index] | Defined<Tuple2[Index]>;
+    [Index in keyof Tuple1]: Tuple1[Index] | Defined<IndexOrUndefined<Tuple2, Index>>;
 };
 declare type MergeTupleWithTupleOptional<Tuple1 extends readonly [...any[]], Tuple2 extends readonly [...any[]]> = {
-    //@ts-ignore
-    [Index in keyof Tuple1]: Tuple1[Index] | Tuple2[Index];
+    [Index in keyof Tuple1]: Tuple1[Index] | IndexOrUndefined<Tuple2, Index>;
 };
 declare type RequiredArray<BOT extends BaseOptionType, DT extends readonly any[]> = DT extends readonly [...any[]] ? [
     ...MergeTypeWithTuple<BasePrimitiveType<BOT>, DefinedOne<DT>>,
@@ -86,4 +85,4 @@ export interface OptionalInputsOption<OT extends OptionType, DT> extends BaseInp
     required?: false;
 }
 export declare type InputsOption<OT extends OptionType, DT, RT extends RequiredType> = RequiredInputsOption<OT, DT> | OptionalInputsOption<OT, DT>;
-export { };
+export {};
