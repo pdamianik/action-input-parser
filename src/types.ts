@@ -1,4 +1,4 @@
-export type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;
+export type Expand<T> = { [K in keyof T]: T[K] };
 export type Defined<T> = T extends undefined | null ? never : T;
 export type DefinedOne<T> = T extends Object ? { [Key in keyof T]: Defined<T[Key]> } : Defined<T>;
 export type DefinedRecursive<T> = T extends Object ? { [Key in keyof T]: DefinedRecursive<T[Key]> } : Defined<T>;
@@ -52,14 +52,12 @@ type MergeTupleWithTupleOptional<Tuple1 extends readonly [...any[]], Tuple2 exte
 
 type RequiredArray<BOT extends BaseOptionType, DT extends readonly any[]> =
     DT extends readonly [...any[]] ?
-    //@ts-ignore
     [...MergeTypeWithTuple<BasePrimitiveType<BOT>, DefinedOne<DT>>,
         ...BasePrimitiveType<BOT>[]] :
     (BasePrimitiveType<BOT> | Defined<ArrayElements<DT>>)[];
 
 type OptionalArray<BOT extends BaseOptionType, DT extends readonly any[]> =
     DT extends readonly [...any[]] ?
-    //@ts-ignore
     [...MergeTypeWithTuple<BasePrimitiveType<BOT>, DT>,
         ...(BasePrimitiveType<BOT> | undefined)[]] :
     (BasePrimitiveType<BOT> | ArrayElements<DT> | undefined)[];
@@ -99,7 +97,6 @@ export type OptionalOptionPrimitiveResult<OT extends OptionType, DT> =
     (BasePrimitiveType<E> | DT)[] | undefined :
     OT extends readonly [...BaseOptionType[]] ?
     DT extends readonly any[] ? OptionalTuple<Writeable<OT>, DT> :
-    //@ts-ignore
     MergeTypeWithTuple<DT, BasePrimitiveTuple<Writeable<OT>>> | undefined :
     never;
 

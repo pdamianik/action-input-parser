@@ -245,7 +245,7 @@ describe('get input', () => {
 
 			describe('multi element', () => {
 
-				describe('sepatrated by', () => {
+				describe('separated by', () => {
 
 					it('nothing (single element)', () => {
 						const input = getInput({ input: 'abc', type: <const>[String] });
@@ -264,7 +264,7 @@ describe('get input', () => {
 						it('trailing', () => {
 							const input = getInput({ input: 'beta', type: <const>[String] });
 							const check: TypeCheck<typeof input, (string | undefined)[] | undefined> = input;
-							expect(input).toEqual(['a', 'b', 'c']);
+							expect(input).toEqual(['a', 'b', 'c', undefined]);
 						});
 
 					});
@@ -280,7 +280,7 @@ describe('get input', () => {
 						it('trailing', () => {
 							const input = getInput({ input: 'delta', type: <const>[String] });
 							const check: TypeCheck<typeof input, (string | undefined)[] | undefined> = input;
-							expect(input).toEqual(['a', 'b', 'c']);
+							expect(input).toEqual(['a', 'b', 'c', undefined]);
 						});
 
 					});
@@ -296,7 +296,7 @@ describe('get input', () => {
 						it('trailing', () => {
 							const input = getInput({ input: 'zeta', type: <const>[String] });
 							const check: TypeCheck<typeof input, (string | undefined)[] | undefined> = input;
-							expect(input).toEqual(['a', 'b', 'c']);
+							expect(input).toEqual(['a', 'b', 'c', undefined]);
 						});
 
 					});
@@ -494,7 +494,7 @@ describe('get input', () => {
 
 			describe('multi element', () => {
 
-				describe('sepatrated by', () => {
+				describe('separated by', () => {
 
 					it('nothing (single element)', () => {
 						const input = getInput({ input: 'abc', type: <const>[String], required: true });
@@ -511,9 +511,10 @@ describe('get input', () => {
 						});
 
 						it('trailing', () => {
-							const input = getInput({ input: 'beta', type: <const>[String], required: true });
-							const check: TypeCheck<typeof input, string[]> = input;
-							expect(input).toEqual(['a', 'b', 'c']);
+							expect(() => {
+								const input = getInput({ input: 'beta', type: <const>[String], required: true });
+								const check: TypeCheck<typeof input, string[]> = input;
+							}).toThrow('input array `beta` contains elements that could not be parsed');
 						});
 
 					});
@@ -527,9 +528,10 @@ describe('get input', () => {
 						});
 
 						it('trailing', () => {
-							const input = getInput({ input: 'delta', type: <const>[String], required: true });
-							const check: TypeCheck<typeof input, string[]> = input;
-							expect(input).toEqual(['a', 'b', 'c']);
+							expect(() => {
+								const input = getInput({ input: 'delta', type: <const>[String], required: true });
+								const check: TypeCheck<typeof input, string[]> = input;
+							}).toThrow('input array `delta` contains elements that could not be parsed');
 						});
 
 					});
@@ -543,9 +545,10 @@ describe('get input', () => {
 						});
 
 						it('trailing', () => {
-							const input = getInput({ input: 'zeta', type: <const>[String], required: true });
-							const check: TypeCheck<typeof input, string[]> = input;
-							expect(input).toEqual(['a', 'b', 'c']);
+							expect(() => {
+								const input = getInput({ input: 'zeta', type: <const>[String], required: true });
+								const check: TypeCheck<typeof input, string[]> = input;
+							}).toThrow('input array `zeta` contains elements that could not be parsed');
 						});
 
 					});
@@ -745,7 +748,7 @@ describe('get input', () => {
 
 					describe('multi element', () => {
 
-						describe('sepatrated by', () => {
+						describe('separated by', () => {
 
 							it('nothing (single element)', () => {
 								const input = getInput({ input: 'abc', type: <const>[String], default: <const>['xyz'] });
@@ -1076,7 +1079,7 @@ describe('get input', () => {
 
 					describe('multi element', () => {
 
-						describe('sepatrated by', () => {
+						describe('separated by', () => {
 
 							it('nothing (single element)', () => {
 								const input = getInput({ input: 'abc', type: <const>[String], required: true, default: <const>['xyz'] });
@@ -1093,9 +1096,10 @@ describe('get input', () => {
 								});
 
 								it('trailing', () => {
-									const input = getInput({ input: 'beta', type: [String], required: true, default: <const>['x', 'y', 'z'] });
-									const check: TypeCheck<typeof input, [string, string, string, ...string[]]> = input;
-									expect(input).toEqual(['a', 'b', 'c']);
+									expect(() => {
+										const input = getInput({ input: 'beta', type: [String], required: true, default: <const>['x', 'y', 'z'] });
+										const check: TypeCheck<typeof input, [string, string, string, ...string[]]> = input;
+									}).toThrow('input array `beta` contains elements that could not be parsed');
 								});
 
 							});
@@ -1109,9 +1113,10 @@ describe('get input', () => {
 								});
 
 								it('trailing', () => {
-									const input = getInput({ input: 'delta', type: [String], required: true, default: <const>['x', 'y', 'z'] });
-									const check: TypeCheck<typeof input, [string, string, string, ...string[]]> = input;
-									expect(input).toEqual(['a', 'b', 'c']);
+									expect(() => {
+										const input = getInput({ input: 'delta', type: [String], required: true, default: <const>['x', 'y', 'z'] });
+										const check: TypeCheck<typeof input, [string, string, string, ...string[]]> = input;
+									}).toThrow('input array `delta` contains elements that could not be parsed');
 								});
 
 							});
@@ -1125,9 +1130,10 @@ describe('get input', () => {
 								});
 
 								it('trailing', () => {
-									const input = getInput({ input: 'zeta', type: [String], required: true, default: <const>['x', 'y', 'z'] });
-									const check: TypeCheck<typeof input, [string, string, string, ...string[]]> = input;
-									expect(input).toEqual(['a', 'b', 'c']);
+									expect(() => {
+										const input = getInput({ input: 'zeta', type: [String], required: true, default: <const>['x', 'y', 'z'] });
+										const check: TypeCheck<typeof input, [string, string, string, ...string[]]> = input;
+									}).toThrow('input array `zeta` contains elements that could not be parsed');
 								});
 
 							});
@@ -1417,7 +1423,7 @@ describe('get input', () => {
 
 						describe('single default', () => {
 
-							describe('sepatrated by', () => {
+							describe('separated by', () => {
 
 								it('nothing (single element)', () => {
 									const input = getInput({ input: 'abc', type: [String], default: 10 });
@@ -1436,7 +1442,7 @@ describe('get input', () => {
 									it('trailing', () => {
 										const input = getInput({ input: 'beta', type: [String], default: 10 });
 										const check: TypeCheck<typeof input, (string | number)[] | undefined> = input;
-										expect(input).toEqual(['a', 'b', 'c']);
+										expect(input).toEqual(['a', 'b', 'c', 10]);
 									});
 
 								});
@@ -1452,7 +1458,7 @@ describe('get input', () => {
 									it('trailing', () => {
 										const input = getInput({ input: 'delta', type: [String], default: 10 });
 										const check: TypeCheck<typeof input, (string | number)[] | undefined> = input;
-										expect(input).toEqual(['a', 'b', 'c']);
+										expect(input).toEqual(['a', 'b', 'c', 10]);
 									});
 
 								});
@@ -1468,7 +1474,7 @@ describe('get input', () => {
 									it('trailing', () => {
 										const input = getInput({ input: 'zeta', type: [String], default: 10 });
 										const check: TypeCheck<typeof input, (string | number)[] | undefined> = input;
-										expect(input).toEqual(['a', 'b', 'c']);
+										expect(input).toEqual(['a', 'b', 'c', 10]);
 									});
 
 								});
@@ -1553,7 +1559,7 @@ describe('get input', () => {
 
 						describe('multi element default', () => {
 
-							describe('sepatrated by', () => {
+							describe('separated by', () => {
 
 								it('nothing (single element)', () => {
 									const input = getInput({ input: 'abc', type: <const>[String], default: <const>[10] });
@@ -1888,7 +1894,7 @@ describe('get input', () => {
 
 						describe('single default', () => {
 
-							describe('sepatrated by', () => {
+							describe('separated by', () => {
 
 								it('nothing (single element)', () => {
 									const input = getInput({ input: 'abc', type: [String], required: true, default: 10 });
@@ -1907,7 +1913,7 @@ describe('get input', () => {
 									it('trailing', () => {
 										const input = getInput({ input: 'beta', type: [String], required: true, default: 10 });
 										const check: TypeCheck<typeof input, (string | number)[]> = input;
-										expect(input).toEqual(['a', 'b', 'c']);
+										expect(input).toEqual(['a', 'b', 'c', 10]);
 									});
 
 								});
@@ -1923,7 +1929,7 @@ describe('get input', () => {
 									it('trailing', () => {
 										const input = getInput({ input: 'delta', type: [String], required: true, default: 10 });
 										const check: TypeCheck<typeof input, (string | number)[]> = input;
-										expect(input).toEqual(['a', 'b', 'c']);
+										expect(input).toEqual(['a', 'b', 'c', 10]);
 									});
 
 								});
@@ -1939,7 +1945,7 @@ describe('get input', () => {
 									it('trailing', () => {
 										const input = getInput({ input: 'zeta', type: [String], required: true, default: 10 });
 										const check: TypeCheck<typeof input, (string | number)[]> = input;
-										expect(input).toEqual(['a', 'b', 'c']);
+										expect(input).toEqual(['a', 'b', 'c', 10]);
 									});
 
 								});
@@ -2025,7 +2031,7 @@ describe('get input', () => {
 
 						describe('multi element default', () => {
 
-							describe('sepatrated by', () => {
+							describe('separated by', () => {
 
 								it('nothing (single element)', () => {
 									const input = getInput({ input: 'abc', type: [String], required: true, default: <const>[10] });

@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { EOL } from 'os';
 import { VALID_TYPES, OptionType, ParseFunction, PrimitiveType, InputOption, OptionPrimitiveResult, RequiredType, Known, BaseInputOption, OptionalInputOption, RequiredInputOption, Expand, RequiredInputsOption, OptionalInputsOption, InputsOption } from './types';
 
 dotenv.config();
@@ -8,15 +9,14 @@ const DEFAULT_OPTIONS = {
 };
 
 function getEnvVar(key: string) {
-	const input = process.env[`INPUT_${key.replace(/ /g, '_').toUpperCase()}`]?.trimEnd();
-	const raw = process.env[key]?.trimEnd();
+	const input = process.env[`INPUT_${key.replace(/ /g, '_').toUpperCase()}`]?.split(EOL).map(el => el.trim()).join(EOL);
+	const raw = process.env[key]?.split(EOL).map(el => el.trim()).join(EOL);
 
 	return input ?? raw;
 }
 
 function parseArray(val: string) {
 	return val
-		.replace(/,$/, '')
 		.split(/(?:,\n)|[,\n]/)
 		.map(n => n.trim());
 }
